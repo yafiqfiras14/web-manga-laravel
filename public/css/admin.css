@@ -1,0 +1,54 @@
+.admin-body { background: var(--bg); }
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.stat-number { font-size: 2rem; font-weight: 700; color: var(--accent); }
+.stat-label { color: var(--muted); font-size: 0.875rem; }
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    font-size: 0.9rem;
+}
+
+.table th, .table td {
+    padding: 0.65rem 0.85rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+}
+
+.table th { background: var(--bg-soft); color: var(--muted); font-weight: 600; }
+.table tr:last-child td { border-bottom: none; }
+.table .actions { display: flex; gap: 0.35rem; flex-wrap: wrap; align-items: center; }
+
+.thumb { width: 42px; height: 58px; object-fit: cover; border-radius: 6px; }
+.thumb-placeholder { width: 42px; height: 58px; border-radius: 6px; font-size: 0.7rem; }
+.form-card .thumb { margin-top: 0.5rem; }
