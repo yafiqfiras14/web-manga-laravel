@@ -35,4 +35,12 @@ return [
         ],
     ],
 
+    'soundcloud' => [
+        /*
+         * Opsional. Kalau kosong, client ID akan dicari otomatis dari bundle
+         * JavaScript soundcloud.com lalu di-cache selama 6 jam.
+         */
+        'client_id' => env('SOUNDCLOUD_CLIENT_ID'),
+    ],
+
 ];

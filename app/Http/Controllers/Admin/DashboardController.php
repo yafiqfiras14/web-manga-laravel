@@ -3,22 +3,21 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Chapter;
-use App\Models\Manga;
-use App\Models\MangaPage;
+use App\Models\FeaturedTrack;
+use App\Models\User;
 
 class DashboardController extends Controller
 {
     public function index()
     {
         $stats = [
-            'manga' => Manga::count(),
-            'chapters' => Chapter::count(),
-            'pages' => MangaPage::count(),
+            'featured' => FeaturedTrack::count(),
+            'active' => FeaturedTrack::active()->count(),
+            'users' => User::count(),
         ];
 
-        $recentManga = Manga::orderByDesc('updated_at')->take(5)->get();
+        $recentTracks = FeaturedTrack::ordered()->take(5)->get();
 
-        return view('admin.dashboard', compact('stats', 'recentManga'));
+        return view('admin.dashboard', compact('stats', 'recentTracks'));
     }
 }

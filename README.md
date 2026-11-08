@@ -1,59 +1,104 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# SoundKu
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Web streaming musik sederhana yang mengambil katalog publik dari **SoundCloud** (scraping API v2), dibangun dengan **Laravel 12**. Dulu proyek ini adalah situs baca manga; sekarang seluruh antarmuka dan datanya sudah diganti menjadi pemutar musik.
 
-## About Laravel
+![SoundKu](https://img.shields.io/badge/Laravel-12-ff2d20?logo=laravel&logoColor=white)
+![PHP](https://img.shields.io/badge/PHP-8.2-777bb4?logo=php&logoColor=white)
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Fitur
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- **Beranda** dengan hero track pilihan, chart trending SoundCloud, dan section chill/lo-fi.
+- **Pencarian** lagu, artis, dan playlist langsung ke API SoundCloud (dengan saran pencarian realtime di topbar).
+- **Halaman detail** track, artis, dan playlist.
+- **Genre** — chart per genre dengan fallback otomatis ke pencarian bila chart kosong.
+- **Pemutar audio** dengan antrean, acak, ulangi (semua/satu), seek, volume, Media Session, dan dukungan HLS via hls.js.
+- **Favorit** dan **riwayat putar** disimpan di `localStorage` (tanpa akun).
+- **Panel admin** untuk mengkurasi "Pilihan editor" dengan menempel URL track atau playlist SoundCloud. Metadata diambil otomatis.
+- **Proxy audio** di server untuk segmen HLS SoundCloud yang tidak mengizinkan CORS.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Cara kerja pengambilan data
 
-## Learning Laravel
+`App\Services\SoundCloudService` memanggil `https://api-v2.soundcloud.com` memakai `client_id`. Karena SoundCloud tidak lagi membagikan client ID secara publik:
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+1. Kalau `SOUNDCLOUD_CLIENT_ID` di `.env` terisi, nilai itu yang dipakai.
+2. Kalau kosong, service mencari client ID dari bundle JavaScript `soundcloud.com` lalu menyimpannya di cache selama 6 jam.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Endpoint yang dipakai: `/charts`, `/search/tracks`, `/search/users`, `/search/playlists`, `/tracks/{id}`, `/tracks/{id}/related`, `/users/{id}`, `/users/{id}/tracks`, `/playlists/{id}`, dan `/resolve`.
 
-## Laravel Sponsors
+### Streaming
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+- Track `policy=ALLOW` umumnya hanya tersedia sebagai **HLS**. Playlist `.m3u8` diambil server, URL segmennya ditulis ulang agar lewat `/api/segment`, lalu diputar browser dengan hls.js.
+- Track `policy=SNIP` mendapat **preview 30 detik** (progressive MP3). UI menandainya dengan badge "30 detik".
+- URL audio ditandatangani dan kedaluwarsa, jadi semuanya di-cache singkat (2–15 menit) di server.
 
-### Premium Partners
+## Instalasi
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+```bash
+composer install
+cp .env.example .env
+php artisan key:generate
+```
 
-## Contributing
+Atur database (default SQLite sudah siap):
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```env
+DB_CONNECTION=sqlite
+```
 
-## Code of Conduct
+Lalu:
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```bash
+php artisan migrate
+php artisan db:seed
+php artisan serve
+```
 
-## Security Vulnerabilities
+Buka <http://localhost:8000>.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Seeder membuat akun admin dan (kalau internet tersedia) 8 track trending sebagai pilihan editor:
 
-## License
+- Email: `admin@soundku.test`
+- Password: `password`
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Ganti password lewat `php artisan tinker` sebelum dipakai di publik.
+
+### Variabel opsional
+
+```env
+# Isi kalau punya client_id resmi. Kosongkan untuk auto-detect.
+SOUNDCLOUD_CLIENT_ID=
+```
+
+## Struktur penting
+
+```
+app/
+├── Exceptions/SoundCloudException.php
+├── Http/Controllers/
+│   ├── HomeController.php, SearchController.php, GenreController.php
+│   ├── TrackController.php, ArtistController.php, PlaylistController.php
+│   ├── Api/MusicController.php        # search, stream, hls, segment
+│   └── Admin/                         # auth, dashboard, featured
+├── Models/FeaturedTrack.php
+├── Services/SoundCloudService.php     # client API + stream resolver
+└── Support/helpers.php                # format_duration, format_count, track_json
+config/music.php                       # daftar genre & section beranda
+public/css/app.css                     # tema gelap, player, layout
+public/js/player.js                    # audio player + HLS
+public/js/app.js                       # favorit, saran pencarian, layout
+```
+
+## Endpoint internal
+
+| Method | URL | Fungsi |
+| --- | --- | --- |
+| GET | `/api/search?q=` | Pencarian track (untuk saran pencarian) |
+| GET | `/api/stream/{id}` | Resolve URL streaming (JSON) |
+| GET | `/api/hls/{id}` | Playlist HLS yang sudah diproksi |
+| GET | `/api/segment?u=` | Proxy segmen audio |
+
+## Catatan
+
+- Proyek ini hanya memutar audio dari katalog publik SoundCloud dan tidak mengunduh/menyimpan lagu.
+- Chart per genre milik SoundCloud sering mengembalikan 404. `SoundCloudService::chart()` otomatis fallback ke hasil pencarian genre tersebut.
+- Kalau SoundCloud mengubah struktur bundle atau API-nya, isi `SOUNDCLOUD_CLIENT_ID` manual agar situs tetap jalan.

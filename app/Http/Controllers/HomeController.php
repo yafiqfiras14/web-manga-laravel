@@ -2,33 +2,39 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Chapter;
-use App\Models\Manga;
-use Illuminate\Http\Request;
+use App\Exceptions\SoundCloudException;
+use App\Models\FeaturedTrack;
+use App\Services\SoundCloudService;
 
 class HomeController extends Controller
 {
-    public function index(Request $request)
+    public function index(SoundCloudService $soundcloud)
     {
-        $query = trim((string) $request->query('q'));
+        $editorPicks = FeaturedTrack::active()
+            ->ordered()
+            ->get()
+            ->map(fn (FeaturedTrack $track): array => $track->toTrack())
+            ->all();
 
-        $manga = Manga::query()
-            ->when($query !== '', function ($q) use ($query) {
-                $q->where(function ($w) use ($query) {
-                    $w->where('title', 'like', "%{$query}%")
-                        ->orWhere('author', 'like', "%{$query}%");
-                });
-            })
-            ->orderByDesc('updated_at')
-            ->paginate(12)
-            ->withQueryString();
+        $trending = [];
+        $chill = [];
+        $error = null;
 
-        $latestChapters = Chapter::with('manga')
-            ->orderByDesc('published_at')
-            ->orderByDesc('id')
-            ->take(10)
-            ->get();
+        try {
+            $trending = $soundcloud->chart('all-music', 14);
+            $chill = $soundcloud->searchTracks(config('music.sections.chill.query'), 8);
+        } catch (SoundCloudException $exception) {
+            $error = $exception->getMessage();
+        }
 
-        return view('home', compact('manga', 'latestChapters', 'query'));
+        $featured = $editorPicks[0] ?? $trending[0] ?? null;
+
+        return view('home', [
+            'featured' => $featured,
+            'editorPicks' => $editorPicks,
+            'trending' => $trending,
+            'chill' => $chill,
+            'error' => $error,
+        ]);
     }
 }
