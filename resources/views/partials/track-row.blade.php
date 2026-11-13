@@ -3,7 +3,7 @@
     $track = $track ?? [];
 @endphp
 
-<div class="track-row">
+<div class="track-row" data-track-id="{{ $track['id'] }}">
     <div class="row-leading">
         <span class="row-index">{{ str_pad((string) ($index + 1), 2, '0', STR_PAD_LEFT) }}</span>
         <div class="row-art-wrap">
@@ -30,6 +30,13 @@
 
     <span class="row-genre">{{ $track['genre'] ?: '—' }}</span>
     <span class="row-duration">{{ format_duration((int) ($track['duration'] ?? 0)) }}</span>
+
+    <button class="row-add" type="button"
+            data-add-track="{{ track_json($track) }}"
+            aria-label="Simpan {{ $track['title'] }} ke playlist"
+            title="Simpan ke playlist">
+        <x-icon name="plus" :size="15" />
+    </button>
 
     <button class="fav-btn row-fav" type="button"
             data-fav="{{ track_json($track) }}"

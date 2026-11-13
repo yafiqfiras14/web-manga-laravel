@@ -64,6 +64,10 @@
                     <x-icon name="heart" :size="17" /> <span>Favorit</span>
                 </button>
 
+                <button class="btn btn-glass btn-lg" type="button" data-add-track="{{ track_json($track) }}">
+                    <x-icon name="plus" :size="16" /> <span>Simpan ke playlist</span>
+                </button>
+
                 @if (! empty($track['permalink_url']))
                     <a class="btn btn-glass btn-lg" href="{{ $track['permalink_url'] }}" target="_blank" rel="noopener noreferrer">
                         <x-icon name="external" :size="16" /> Buka di SoundCloud

@@ -11,7 +11,7 @@
     top: 0;
     z-index: 40;
     border-bottom: 1px solid var(--border);
-    background: rgba(10, 11, 16, 0.82);
+    background: rgba(var(--panel-rgb), 0.82);
     backdrop-filter: blur(20px);
 }
 
@@ -66,7 +66,7 @@
 
 .admin-nav a:hover {
     color: var(--text);
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(var(--inset-rgb), 0.05);
 }
 
 .admin-nav a.is-active {
@@ -131,7 +131,7 @@
     border-radius: 16px;
     background:
         radial-gradient(120% 140% at 100% 0%, rgba(168, 85, 247, 0.12), transparent 55%),
-        rgba(255, 255, 255, 0.022);
+        rgba(var(--inset-rgb), 0.022);
     overflow: hidden;
 }
 
@@ -164,7 +164,7 @@
 .panel {
     border: 1px solid var(--border);
     border-radius: 18px;
-    background: rgba(255, 255, 255, 0.018);
+    background: rgba(var(--inset-rgb), 0.018);
     overflow: hidden;
 }
 
@@ -221,7 +221,7 @@
 }
 
 .table tbody tr:hover {
-    background: rgba(255, 255, 255, 0.025);
+    background: rgba(var(--inset-rgb), 0.025);
 }
 
 .table tr:last-child td {
@@ -291,7 +291,7 @@
 
 .badge-inactive {
     color: var(--muted);
-    background: rgba(255, 255, 255, 0.06);
+    background: rgba(var(--inset-rgb), 0.06);
     border: 1px solid var(--border);
 }
 
@@ -319,7 +319,7 @@
     border-radius: 18px;
     background:
         radial-gradient(100% 140% at 100% 0%, rgba(168, 85, 247, 0.08), transparent 55%),
-        rgba(255, 255, 255, 0.018);
+        rgba(var(--inset-rgb), 0.018);
 }
 
 .form-preview {
@@ -389,7 +389,8 @@
     border: 1px solid var(--border-strong);
     border-radius: 10px;
     outline: none;
-    background: rgba(8, 9, 13, 0.55);
+    color: var(--text);
+    background: rgba(var(--panel-rgb), 0.55);
     font-size: 13.5px;
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
@@ -429,7 +430,7 @@
     padding: 11px 13px;
     border: 1px solid var(--border);
     border-radius: 10px;
-    background: rgba(255, 255, 255, 0.02);
+    background: rgba(var(--inset-rgb), 0.02);
     color: var(--muted-2);
     font-size: 11.5px;
 }
@@ -467,7 +468,7 @@
     background:
         radial-gradient(90% 90% at 10% 0%, rgba(168, 85, 247, 0.3), transparent 60%),
         radial-gradient(80% 80% at 100% 100%, rgba(244, 63, 142, 0.2), transparent 60%),
-        linear-gradient(150deg, #161927, #0a0b11);
+        linear-gradient(150deg, var(--hero-a), var(--hero-b));
 }
 
 .login-aside-copy {
@@ -516,7 +517,7 @@
     display: grid;
     place-items: center;
     padding: 40px 28px;
-    background: rgba(8, 9, 13, 0.6);
+    background: rgba(var(--panel-rgb), 0.6);
 }
 
 .login-card {
@@ -546,14 +547,15 @@
 }
 
 .login-card input[type="email"],
-.login-card input[type="password"] {
+.login-card input[type="password"],
+.login-card input[type="text"] {
     width: 100%;
     height: 44px;
     padding: 0 13px;
     border: 1px solid var(--border-strong);
     border-radius: 10px;
     outline: none;
-    background: rgba(255, 255, 255, 0.035);
+    background: rgba(var(--inset-rgb), 0.035);
     font-size: 14px;
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
@@ -625,4 +627,33 @@
     .form-card {
         padding: 20px;
     }
+}
+
+/* Light mode tweaks for admin & auth screens */
+
+html[data-theme="light"] .login-aside {
+    background:
+        radial-gradient(90% 90% at 10% 0%, rgba(168, 85, 247, 0.14), transparent 60%),
+        radial-gradient(80% 80% at 100% 100%, rgba(244, 63, 142, 0.1), transparent 60%),
+        linear-gradient(150deg, #ffffff, #eef1fa);
+}
+
+html[data-theme="light"] .badge-active {
+    color: #047857;
+    background: rgba(16, 185, 129, 0.12);
+    border-color: rgba(5, 150, 105, 0.25);
+}
+
+html[data-theme="light"] .badge-inactive {
+    color: var(--muted);
+}
+
+html[data-theme="light"] .admin-topbar {
+    box-shadow: 0 12px 30px -26px rgba(20, 24, 40, 0.45);
+}
+
+html[data-theme="light"] .login-card input[type="email"],
+html[data-theme="light"] .login-card input[type="password"],
+html[data-theme="light"] .login-card input[type="text"] {
+    background: #ffffff;
 }

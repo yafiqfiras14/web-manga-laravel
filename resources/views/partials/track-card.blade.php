@@ -3,7 +3,7 @@
     $track = $track ?? [];
 @endphp
 
-<article class="track-card">
+<article class="track-card" data-track-id="{{ $track['id'] }}">
     <div class="track-art">
         @if (! empty($track['artwork']))
             <img src="{{ $track['artwork'] }}" alt="{{ $track['title'] }}" loading="lazy" decoding="async">
@@ -26,6 +26,13 @@
                 aria-label="Tambah {{ $track['title'] }} ke favorit"
                 aria-pressed="false">
             <x-icon name="heart" :size="17" />
+        </button>
+
+        <button class="card-add" type="button"
+                data-add-track="{{ track_json($track) }}"
+                aria-label="Simpan {{ $track['title'] }} ke playlist"
+                title="Simpan ke playlist">
+            <x-icon name="plus" :size="16" />
         </button>
     </div>
 

@@ -3,8 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#08090d">
+    <meta name="theme-color" content="#08090d" id="theme-color-meta">
     <title>@yield('title', 'Admin') — SoundKu</title>
+
+    <script>
+        (function () {
+            try {
+                var stored = localStorage.getItem('soundku:theme');
+                var theme = stored === 'light' || stored === 'dark'
+                    ? stored
+                    : (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+
+                document.documentElement.dataset.theme = theme;
+                document.documentElement.style.colorScheme = theme;
+                document.getElementById('theme-color-meta').setAttribute('content', theme === 'light' ? '#f4f5fa' : '#08090d');
+            } catch (error) {
+                document.documentElement.dataset.theme = 'dark';
+            }
+        })();
+    </script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -27,6 +44,10 @@
             </nav>
 
             <div class="admin-actions">
+                <button class="icon-btn theme-toggle" type="button" data-theme-toggle aria-label="Ganti tema" title="Ganti tema">
+                    <x-icon name="sun" :size="18" class="theme-icon theme-icon-sun" />
+                    <x-icon name="moon" :size="18" class="theme-icon theme-icon-moon" />
+                </button>
                 <a href="{{ route('home') }}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">
                     <x-icon name="external" :size="14" /> Lihat situs
                 </a>
@@ -63,5 +84,7 @@
 
         @yield('content')
     </main>
+
+    <script src="{{ asset('js/app.js') }}" defer></script>
 </body>
 </html>

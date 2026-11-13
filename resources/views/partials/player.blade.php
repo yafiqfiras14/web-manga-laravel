@@ -11,6 +11,10 @@
                 aria-label="Favoritkan lagu ini" aria-pressed="false">
             <x-icon name="heart" :size="18" />
         </button>
+        <button class="player-btn player-add" id="player-add" type="button" disabled
+                aria-label="Simpan lagu ini ke playlist" title="Simpan ke playlist">
+            <x-icon name="plus" :size="18" />
+        </button>
     </div>
 
     <div class="player-center">

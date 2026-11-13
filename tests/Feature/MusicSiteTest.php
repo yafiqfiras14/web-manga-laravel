@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\FeaturedTrack;
+use App\Models\PlayHistory;
 use App\Models\User;
 use App\Services\SoundCloudService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -14,24 +15,7 @@ class MusicSiteTest extends TestCase
 
     private function fakeSoundCloud(): void
     {
-        $track = [
-            'id' => '12345',
-            'title' => 'Contoh Lagu',
-            'artist' => 'Contoh Artis',
-            'artist_id' => '777',
-            'artist_avatar' => null,
-            'artwork' => 'https://i1.sndcdn.com/artworks-contoh-t500x500.jpg',
-            'duration' => 215,
-            'genre' => 'Lo-fi',
-            'likes' => 10,
-            'plays' => 1200,
-            'created_at' => '2026-01-01T00:00:00Z',
-            'permalink_url' => 'https://soundcloud.com/contoh/lagu',
-            'streamable' => true,
-            'policy' => 'ALLOW',
-            'description' => 'Deskripsi contoh.',
-            'is_preview' => false,
-        ];
+        $track = $this->trackPayload();
 
         $artist = [
             'id' => '777',
@@ -88,6 +72,87 @@ class MusicSiteTest extends TestCase
         $this->app->instance(SoundCloudService::class, $mock);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
+    private function trackPayload(): array
+    {
+        return [
+            'id' => '12345',
+            'title' => 'Contoh Lagu',
+            'artist' => 'Contoh Artis',
+            'artist_id' => '777',
+            'artist_avatar' => null,
+            'artwork' => 'https://i1.sndcdn.com/artworks-contoh-t500x500.jpg',
+            'duration' => 215,
+            'genre' => 'Lo-fi',
+            'likes' => 10,
+            'plays' => 1200,
+            'created_at' => '2026-01-01T00:00:00Z',
+            'permalink_url' => 'https://soundcloud.com/contoh/lagu',
+            'streamable' => true,
+            'policy' => 'ALLOW',
+            'description' => 'Deskripsi contoh.',
+            'is_preview' => false,
+        ];
+    }
+
+    private function admin(): User
+    {
+        return User::factory()->create(['is_admin' => true]);
+    }
+
+    public function test_guests_are_redirected_to_login(): void
+    {
+        $this->get('/')->assertRedirect('/login');
+        $this->get('/search')->assertRedirect('/login');
+        $this->get('/library')->assertRedirect('/login');
+        $this->get('/account')->assertRedirect('/login');
+    }
+
+    public function test_login_page_renders(): void
+    {
+        $this->get('/login')
+            ->assertOk()
+            ->assertSee('Masuk ke SoundKu')
+            ->assertSee('demo@soundku.test');
+    }
+
+    public function test_register_page_renders(): void
+    {
+        $this->get('/register')
+            ->assertOk()
+            ->assertSee('Buat akun');
+    }
+
+    public function test_user_can_register(): void
+    {
+        $this->post('/register', [
+            'name' => 'Budi Santoso',
+            'email' => 'budi@example.com',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ])->assertRedirect('/');
+
+        $this->assertAuthenticated();
+        $this->assertDatabaseHas('users', ['email' => 'budi@example.com']);
+    }
+
+    public function test_user_can_login_and_logout(): void
+    {
+        $user = User::factory()->create(['password' => 'password']);
+
+        $this->post('/login', [
+            'email' => $user->email,
+            'password' => 'password',
+        ])->assertRedirect('/');
+
+        $this->assertAuthenticatedAs($user);
+
+        $this->post('/logout')->assertRedirect('/login');
+        $this->assertGuest();
+    }
+
     public function test_home_page_renders(): void
     {
         $this->fakeSoundCloud();
@@ -102,7 +167,8 @@ class MusicSiteTest extends TestCase
             'is_active' => true,
         ]);
 
-        $this->get('/')
+        $this->actingAs(User::factory()->create())
+            ->get('/')
             ->assertOk()
             ->assertSee('Contoh Lagu')
             ->assertSee('Trending saat ini');
@@ -112,7 +178,8 @@ class MusicSiteTest extends TestCase
     {
         $this->fakeSoundCloud();
 
-        $this->get('/search?q=lofi')
+        $this->actingAs(User::factory()->create())
+            ->get('/search?q=lofi')
             ->assertOk()
             ->assertSee('Contoh Lagu')
             ->assertSee('Contoh Artis')
@@ -123,7 +190,8 @@ class MusicSiteTest extends TestCase
     {
         $this->fakeSoundCloud();
 
-        $this->get('/search')
+        $this->actingAs(User::factory()->create())
+            ->get('/search')
             ->assertOk()
             ->assertSee('Mulai dari genre');
     }
@@ -132,50 +200,221 @@ class MusicSiteTest extends TestCase
     {
         $this->fakeSoundCloud();
 
-        $this->get('/track/12345')->assertOk()->assertSee('Contoh Lagu');
-        $this->get('/artist/777')->assertOk()->assertSee('Contoh Artis');
-        $this->get('/playlist/999')->assertOk()->assertSee('Playlist Contoh');
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->get('/track/12345')->assertOk()->assertSee('Contoh Lagu');
+        $this->actingAs($user)->get('/artist/777')->assertOk()->assertSee('Contoh Artis');
+        $this->actingAs($user)->get('/playlist/999')->assertOk()->assertSee('Playlist Contoh');
     }
 
     public function test_genre_page_renders(): void
     {
         $this->fakeSoundCloud();
 
-        $this->get('/genre/chillout')->assertOk()->assertSee('Chill / Lo-fi');
+        $this->actingAs(User::factory()->create())
+            ->get('/genre/chillout')
+            ->assertOk()
+            ->assertSee('Chill / Lo-fi');
     }
 
     public function test_unknown_genre_returns_404(): void
     {
         $this->fakeSoundCloud();
 
-        $this->get('/genre/ngawur')->assertNotFound();
+        $this->actingAs(User::factory()->create())
+            ->get('/genre/ngawur')
+            ->assertNotFound();
     }
 
     public function test_api_stream_returns_json(): void
     {
         $this->fakeSoundCloud();
 
-        $this->getJson('/api/stream/12345')
+        $this->actingAs(User::factory()->create())
+            ->getJson('/api/stream/12345')
             ->assertOk()
             ->assertJsonPath('type', 'progressive')
             ->assertJsonPath('is_preview', false);
     }
 
-    public function test_favorites_page_renders(): void
+    public function test_favorites_page_redirects_to_liked_songs(): void
     {
-        $this->get('/favorites')->assertOk()->assertSee('Lagu favorit');
+        $this->actingAs(User::factory()->create())
+            ->get('/favorites')
+            ->assertRedirect('/library/liked');
+    }
+
+    public function test_library_pages_render_user_collections(): void
+    {
+        $user = User::factory()->create();
+
+        $playlist = $user->playlists()->create(['name' => 'Chill malam']);
+        $playlist->tracks()->create([
+            'soundcloud_id' => '12345',
+            'title' => 'Contoh Lagu',
+            'artist' => 'Contoh Artis',
+            'duration' => 215,
+            'position' => 0,
+        ]);
+
+        $user->likedTracks()->create([
+            'soundcloud_id' => '12345',
+            'title' => 'Contoh Lagu',
+            'artist' => 'Contoh Artis',
+            'duration' => 215,
+        ]);
+
+        $user->playHistories()->create([
+            'soundcloud_id' => '12345',
+            'title' => 'Contoh Lagu',
+            'artist' => 'Contoh Artis',
+            'duration' => 215,
+            'played_at' => now(),
+        ]);
+
+        $this->actingAs($user)->get('/library')->assertOk()->assertSee('Chill malam');
+        $this->actingAs($user)->get('/library/liked')->assertOk()->assertSee('Contoh Lagu');
+        $this->actingAs($user)->get('/library/history')->assertOk()->assertSee('Contoh Lagu');
+        $this->actingAs($user)->get('/account')->assertOk()->assertSee($user->email);
+        $this->actingAs($user)->get("/library/playlists/{$playlist->id}")->assertOk()->assertSee('Chill malam');
+    }
+
+    public function test_user_can_create_update_and_delete_playlist(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)
+            ->postJson('/library/playlists', ['name' => 'Playlist Baru']);
+
+        $response->assertCreated()->assertJsonPath('playlist.name', 'Playlist Baru');
+
+        $playlist = $user->playlists()->firstOrFail();
+        $this->assertSame('Playlist Baru', $playlist->name);
+
+        $this->actingAs($user)
+            ->putJson("/library/playlists/{$playlist->id}", ['name' => 'Playlist Ganti'])
+            ->assertOk()
+            ->assertJsonPath('playlist.name', 'Playlist Ganti');
+
+        $this->actingAs($user)
+            ->deleteJson("/library/playlists/{$playlist->id}")
+            ->assertOk();
+
+        $this->assertDatabaseMissing('playlists', ['id' => $playlist->id]);
+    }
+
+    public function test_user_can_add_and_remove_tracks_from_playlist(): void
+    {
+        $user = User::factory()->create();
+        $playlist = $user->playlists()->create(['name' => 'Chill malam']);
+
+        $this->actingAs($user)
+            ->postJson("/library/playlists/{$playlist->id}/tracks", ['track' => $this->trackPayload()])
+            ->assertOk()
+            ->assertJsonPath('track_count', 1);
+
+        $this->assertDatabaseHas('playlist_tracks', [
+            'playlist_id' => $playlist->id,
+            'soundcloud_id' => '12345',
+        ]);
+
+        $track = $playlist->tracks()->firstOrFail();
+
+        $this->actingAs($user)
+            ->deleteJson("/library/playlists/{$playlist->id}/tracks/{$track->id}")
+            ->assertOk()
+            ->assertJsonPath('track_count', 0);
+
+        $this->assertDatabaseMissing('playlist_tracks', ['id' => $track->id]);
+    }
+
+    public function test_user_cannot_manage_another_users_playlist(): void
+    {
+        $owner = User::factory()->create();
+        $other = User::factory()->create();
+        $playlist = $owner->playlists()->create(['name' => 'Punya orang']);
+
+        $this->actingAs($other)
+            ->get("/library/playlists/{$playlist->id}")
+            ->assertForbidden();
+    }
+
+    public function test_like_toggle_and_history_endpoints(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->postJson('/api/library/like', ['track' => $this->trackPayload()])
+            ->assertOk()
+            ->assertJsonPath('liked', true);
+
+        $this->assertDatabaseHas('liked_tracks', [
+            'user_id' => $user->id,
+            'soundcloud_id' => '12345',
+        ]);
+
+        $this->actingAs($user)
+            ->postJson('/api/library/like', ['track' => $this->trackPayload()])
+            ->assertOk()
+            ->assertJsonPath('liked', false);
+
+        $this->assertDatabaseMissing('liked_tracks', [
+            'user_id' => $user->id,
+            'soundcloud_id' => '12345',
+        ]);
+
+        $this->actingAs($user)
+            ->postJson('/api/library/history', ['track' => $this->trackPayload()])
+            ->assertOk();
+
+        $this->actingAs($user)
+            ->postJson('/api/library/history', ['track' => $this->trackPayload()])
+            ->assertOk();
+
+        $this->assertSame(1, PlayHistory::query()->where('user_id', $user->id)->count());
+
+        $this->actingAs($user)
+            ->deleteJson('/api/library/history')
+            ->assertOk();
+
+        $this->assertSame(0, PlayHistory::query()->where('user_id', $user->id)->count());
     }
 
     public function test_admin_pages_require_authentication(): void
     {
-        $this->get('/admin')->assertRedirect('/admin/login');
-        $this->get('/admin/featured')->assertRedirect('/admin/login');
+        $this->get('/admin')->assertRedirect('/login');
+        $this->get('/admin/featured')->assertRedirect('/login');
+    }
+
+    public function test_admin_login_only_accepts_admin_accounts(): void
+    {
+        $admin = $this->admin();
+        $regular = User::factory()->create(['password' => 'password']);
+
+        $this->post('/admin/login', [
+            'email' => $regular->email,
+            'password' => 'password',
+        ])->assertSessionHasErrors('email');
+
+        $this->assertGuest();
+
+        $this->post('/admin/login', [
+            'email' => $admin->email,
+            'password' => 'password',
+        ])->assertRedirect('/admin');
+
+        $this->assertAuthenticatedAs($admin);
+    }
+
+    public function test_regular_users_cannot_access_admin(): void
+    {
+        $this->actingAs(User::factory()->create())
+            ->get('/admin')
+            ->assertRedirect('/');
     }
 
     public function test_admin_can_view_featured_tracks(): void
     {
-        $user = User::factory()->create();
-
         FeaturedTrack::create([
             'soundcloud_id' => '12345',
             'title' => 'Contoh Lagu',
@@ -185,7 +424,7 @@ class MusicSiteTest extends TestCase
             'is_active' => true,
         ]);
 
-        $this->actingAs($user)
+        $this->actingAs($this->admin())
             ->get('/admin/featured')
             ->assertOk()
             ->assertSee('Contoh Lagu')
@@ -194,8 +433,6 @@ class MusicSiteTest extends TestCase
 
     public function test_admin_can_toggle_featured_track(): void
     {
-        $user = User::factory()->create();
-
         $track = FeaturedTrack::create([
             'soundcloud_id' => '12345',
             'title' => 'Contoh Lagu',
@@ -205,7 +442,7 @@ class MusicSiteTest extends TestCase
             'is_active' => true,
         ]);
 
-        $this->actingAs($user)
+        $this->actingAs($this->admin())
             ->patch("/admin/featured/{$track->id}/toggle")
             ->assertRedirect();
 
@@ -216,9 +453,7 @@ class MusicSiteTest extends TestCase
     {
         $this->fakeSoundCloud();
 
-        $user = User::factory()->create();
-
-        $this->actingAs($user)
+        $this->actingAs($this->admin())
             ->post('/admin/featured', ['url' => 'https://soundcloud.com/contoh/lagu'])
             ->assertRedirect('/admin/featured');
 
@@ -233,9 +468,7 @@ class MusicSiteTest extends TestCase
     {
         $this->fakeSoundCloud();
 
-        $user = User::factory()->create();
-
-        $this->actingAs($user)
+        $this->actingAs($this->admin())
             ->post('/admin/featured', ['url' => 'https://soundcloud.com/contoh/sets/contoh'])
             ->assertRedirect('/admin/featured');
 
@@ -249,8 +482,6 @@ class MusicSiteTest extends TestCase
     {
         $this->fakeSoundCloud();
 
-        $user = User::factory()->create();
-
         $track = FeaturedTrack::create([
             'soundcloud_id' => '12345',
             'title' => 'Contoh Lagu',
@@ -260,7 +491,7 @@ class MusicSiteTest extends TestCase
             'is_active' => true,
         ]);
 
-        $this->actingAs($user)
+        $this->actingAs($this->admin())
             ->delete("/admin/featured/{$track->id}")
             ->assertRedirect();
 

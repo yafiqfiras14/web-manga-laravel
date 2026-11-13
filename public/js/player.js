@@ -260,6 +260,10 @@
         elements.preview.hidden = !track.is_preview;
 
         elements.fav.disabled = false;
+
+        if (elements.add) {
+            elements.add.disabled = false;
+        }
         elements.fav.dataset.fav = JSON.stringify(track);
         elements.fav.dataset.favId = track.id;
         elements.fav.setAttribute('aria-pressed', SoundKu.favorites && SoundKu.favorites.has(track) ? 'true' : 'false');
@@ -589,6 +593,7 @@
         elements.duration = el('time-duration');
         elements.volume = el('volume');
         elements.fav = el('player-fav');
+        elements.add = el('player-add');
         elements.preview = el('preview-pill');
         elements.drawer = el('queue-drawer');
         elements.scrim = el('drawer-scrim');
@@ -598,6 +603,14 @@
     }
 
     function initControls() {
+        if (elements.add) {
+            elements.add.addEventListener('click', function () {
+                if (state.current && SoundKu.openPlaylistModal) {
+                    SoundKu.openPlaylistModal(state.current);
+                }
+            });
+        }
+
         elements.player.addEventListener('click', function (event) {
             const action = event.target.closest('[data-action]');
 
@@ -670,6 +683,10 @@
 
             elements.toggle.disabled = true;
             elements.fav.disabled = true;
+
+            if (elements.add) {
+                elements.add.disabled = true;
+            }
             elements.preview.hidden = true;
             elements.title.hidden = true;
             elements.artist.textContent = 'Pilih lagu untuk mulai';

@@ -154,14 +154,20 @@
         </section>
     @endif
 
-    <section class="section" id="recent-section" hidden>
-        <div class="section-head">
-            <div>
-                <h2><x-icon name="clock" :size="18" /> Baru diputar</h2>
-                <p>Lanjutin lagi tanpa harus nyari ulang.</p>
+    @if (count($recent) > 0)
+        <section class="section" id="recent-section" data-queue="{{ track_json($recent) }}">
+            <div class="section-head">
+                <div>
+                    <h2><x-icon name="clock" :size="18" /> Baru diputar</h2>
+                    <p>Lanjutin lagi tanpa harus nyari ulang.</p>
+                </div>
+                <button class="btn btn-ghost btn-sm" type="button" id="recent-clear">Hapus riwayat</button>
             </div>
-            <button class="btn btn-ghost btn-sm" type="button" id="recent-clear">Hapus riwayat</button>
-        </div>
-        <div class="track-grid" id="recent-tracks"></div>
-    </section>
+            <div class="track-grid">
+                @foreach ($recent as $index => $track)
+                    @include('partials.track-card', ['track' => $track, 'index' => $index])
+                @endforeach
+            </div>
+        </section>
+    @endif
 @endsection

@@ -150,6 +150,11 @@
             <path d="M16 3.13a4 4 0 0 1 0 7.75" />
             @break
 
+        @case('user')
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
+            @break
+
         @case('disc')
             <circle cx="12" cy="12" r="9" />
             <circle cx="12" cy="12" r="2.5" />
@@ -191,6 +196,22 @@
 
         @case('wave')
             <path d="M3 12h2l2-5 3 12 3-16 3 12 2-3h3" />
+            @break
+
+        @case('sun')
+            <circle cx="12" cy="12" r="4" />
+            <path d="M12 2v2" />
+            <path d="M12 20v2" />
+            <path d="m4.9 4.9 1.4 1.4" />
+            <path d="m17.7 17.7 1.4 1.4" />
+            <path d="M2 12h2" />
+            <path d="M20 12h2" />
+            <path d="m6.3 17.7-1.4 1.4" />
+            <path d="m19.1 4.9-1.4 1.4" />
+            @break
+
+        @case('moon')
+            <path d="M21 12.8A8.5 8.5 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" />
             @break
 
         @default
